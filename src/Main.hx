@@ -27,15 +27,19 @@ class Main extends Sprite
 	
 	function tests() {
 		
+		var times:Int = 5;
+		
 		Output.write('','Instance created each time.');
 		script = "var sum = 0; for( a in angles ) sum += Math.cos(a);  sum; ";
-		run_x_times(10, function() { howMany_in_1ms(run); } );
-		run_x_times(10, function() { duration(run); } );
+		run_x_times(times, function() { howMany_in_1ms(run); } );
+		run_x_times(times, function() { duration(run); } );
 		
 		Output.write('', '');
 		Output.write('', 'Instance re-used.');
 		HScript_singleton.init();
-		
+		HScript_singleton.instance.script = script;
+		run_x_times(times, function() { howMany_in_1ms(HScript_singleton.instance.run); } );
+		run_x_times(times, function() { duration(HScript_singleton.instance.run); } );
 	}
 	
 	
