@@ -4,6 +4,9 @@ import flash.events.TimerEvent;
 import flash.text.TextField;
 import flash.text.TextFieldAutoSize;
 import flash.utils.Timer;
+import hscript.Expr;
+import hscript.Interp;
+import hscript.Parser;
 import openfl.display.Sprite;
 import openfl.Lib;
 
@@ -24,10 +27,15 @@ class Main extends Sprite
 	
 	function tests() {
 		
+		Output.write('','Instance created each time.');
 		script = "var sum = 0; for( a in angles ) sum += Math.cos(a);  sum; ";
 		run_x_times(10, function() { howMany_in_1ms(run); } );
 		run_x_times(10, function() { duration(run); } );
-		//trace(duration(run));	
+		
+		Output.write('', '');
+		Output.write('', 'Instance re-used.');
+		HScript_singleton.init();
+		
 	}
 	
 	
@@ -69,7 +77,8 @@ class Main extends Sprite
 		var program = parser.parseString(script);
 		var interp = new hscript.Interp();
 		interp.variables.set("Math",Math); // share the Math class
-		interp.variables.set("angles",[0,1,2,3]); // set the angles list
+		interp.variables.set("angles", [0, 1, 2, 3]); // set the angles list
+		interp.execute(program);
 	}
 	
 	
@@ -97,6 +106,37 @@ class Main extends Sprite
 
 }
 
+class HScript_singleton {
+	public static var instance:HScript_singleton;
+	
+	public var script:String;
+	
+	private var parser:Parser;
+	private var program:Expr;
+	private var interp:Interp;
+	
+	static public function init() 
+	{
+		instance = new HScript_singleton();
+	}
+	
+	public function new() {
+	
+		parser = new hscript.Parser();
+		interp = new hscript.Interp();
+		
+		interp.variables.set("Math",Math); // share the Math class
+		interp.variables.set("angles",[0,1,2,3]); // set the angles list
+		
+	}
+	
+	public function run() {
+		program = parser.parseString(script);
+		interp.execute(program);
+	}
+	
+}
+
 class Output extends Sprite{
 	
 	public static var instance:Output;
@@ -105,7 +145,8 @@ class Output extends Sprite{
 	public static function write(script:String, str:String) {
 		if (instance == null) init();
 		trace(str);
-		instance.tf.text += "\n" + script + '-------> ' + str;
+		if (script == "") instance.tf.text += "\n" + str;
+		else instance.tf.text += "\n" + script + '-------> ' + str;
 		
 		instance.tf.y = instance.stage.stageHeight - instance.tf.height; 
 		
